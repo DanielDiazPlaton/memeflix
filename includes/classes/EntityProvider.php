@@ -31,6 +31,88 @@ class EntityProvider{
 
     } // fin de la funcion statica getEntities
 
+    public static function getTVShowEntities($con, $categoryId, $limit){
+
+        $sql = "SELECT DISTINCT(entities.id) FROM `entities` 
+                INNER JOIN videos ON entities.id = videos.entityId 
+                WHERE videos.isMovie = 0 ";
+
+        if($categoryId != null){
+            $sql .= "AND categoryId=:categoryId ";
+        }
+
+        $sql .= "ORDER BY RAND() LIMIT :limit";  // el .= concatena los resultados que se van generando
+
+        // le agrega el string de la consulta
+        $query = $con->prepare($sql);
+
+        if($categoryId != null){
+            $query->bindValue(":categoryId", $categoryId);
+        }
+
+        $query->bindValue(":limit", $limit, PDO::PARAM_INT);
+        $query->execute();
+
+        $result = array();
+        while($row = $query->fetch(PDO::FETCH_ASSOC)){
+            $result[] = new Entity($con, $row["id"]);
+        }
+
+        return $result;  // Traigo la ejecucion de la clase Entity con los parametros que le proporciono esta clase
+
+    } // fin de la funcion statica getEntities
+
+    public static function getMoviesEntities($con, $categoryId, $limit){
+
+        $sql = "SELECT DISTINCT(entities.id) FROM `entities` 
+                INNER JOIN videos ON entities.id = videos.entityId 
+                WHERE videos.isMovie = 1 ";
+
+        if($categoryId != null){
+            $sql .= "AND categoryId=:categoryId ";
+        }
+
+        $sql .= "ORDER BY RAND() LIMIT :limit";  // el .= concatena los resultados que se van generando
+
+        // le agrega el string de la consulta
+        $query = $con->prepare($sql);
+
+        if($categoryId != null){
+            $query->bindValue(":categoryId", $categoryId);
+        }
+
+        $query->bindValue(":limit", $limit, PDO::PARAM_INT);
+        $query->execute();
+
+        $result = array();
+        while($row = $query->fetch(PDO::FETCH_ASSOC)){
+            $result[] = new Entity($con, $row["id"]);
+        }
+
+        return $result;  // Traigo la ejecucion de la clase Entity con los parametros que le proporciono esta clase
+
+    } // fin de la funcion statica getEntities
+
+    public static function getSearchEntities($con, $term) {
+
+        $sql = "SELECT * FROM entities WHERE name LIKE CONCAT('%', :term, '%') LIMIT 30";
+
+        // le agrega el string de la consulta
+        $query = $con->prepare($sql);
+
+        $query->bindValue(":term", $term);
+        $query->execute();
+
+        $result = array();
+        while($row = $query->fetch(PDO::FETCH_ASSOC)){
+            $result[] = new Entity($con, $row);
+        }
+
+        return $result;  // Traigo la ejecucion de la clase Entity con los parametros que le proporciono esta clase
+
+    } // fin de la funcion statica getEntities
+
+
 }
 
 ?>

@@ -27,6 +27,42 @@ class CategoryContainers{
 
     } // fin de la funcion showAllCategories
 
+    public function showTVShowCategories(){
+
+        $query = $this->con->prepare("SELECT * FROM categories");
+        $query->execute();
+
+        $html = "<div class='previewCategories'>
+                    <h1>TV Shows</h1>";
+
+        // Imprime las categorias una por una, hasta que deje de hacer la consulta
+        while($row = $query->fetch(PDO::FETCH_ASSOC)){
+            //$html .= $row["name"];  // el .= hace que se imprima lo que se consulta 
+            $html .= $this->getCategoryHtml($row, null, true, false);
+        }
+
+        return $html . "</div>";
+
+    } // fin de la funcion showTVShowsCategories()
+
+    public function showMovieCategories(){
+
+        $query = $this->con->prepare("SELECT * FROM categories");
+        $query->execute();
+
+        $html = "<div class='previewCategories'>
+                    <h1>Movies</h1>";
+
+        // Imprime las categorias una por una, hasta que deje de hacer la consulta
+        while($row = $query->fetch(PDO::FETCH_ASSOC)){
+            //$html .= $row["name"];  // el .= hace que se imprima lo que se consulta 
+            $html .= $this->getCategoryHtml($row, null, false, true);
+        }
+
+        return $html . "</div>";
+
+    } // fin de la funcion showMoviesCategories()
+
     public function showCategory($categoryId, $title = null){
 
         $query = $this->con->prepare("SELECT * FROM categories WHERE id=:id");
@@ -54,9 +90,11 @@ class CategoryContainers{
             $entities = EntityProvider::getEntities($this->con, $categoryId, 30); // Aqui mando a consultar las
             //peliculas relacionadas a esa categoria y son 30 las que pido
         }else if($tvShows){
-            // Get tv show entities
+            $entities = EntityProvider::getTVShowEntities($this->con, $categoryId, 30); // Aqui mando a consultar las
+            //peliculas relacionadas a esa categoria y son 30 las que pido
         }else{
-            // Get movie entities
+            $entities = EntityProvider::getMoviesEntities($this->con, $categoryId, 30); // Aqui mando a consultar las
+            //peliculas relacionadas a esa categoria y son 30 las que pido
         }
 
         if(sizeof($entities) == 0){
