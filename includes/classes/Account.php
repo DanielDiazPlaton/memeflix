@@ -14,6 +14,27 @@ class Account {
         
     } // Fin de la funcion __construct
 
+    public function updateDetails($fn, $ln, $em, $un) {
+
+        $this->validateFirstName($fn); // This hace referencia a la funcion que pertenece a esta clase
+        $this->validateLastName($ln);
+        $this->validateNewEmails($em, $un);
+
+        if(empty($this->errorArray)){
+            $query = $this->con->prepare("UPDATE users SET firstName=:fn, lastName=:ln, email=:em 
+                                            WHERE username=:un");
+            $query->bindValue(":fn", $fn);
+            $query->bindValue(":ln", $ln);
+            $query->bindValue(":em", $em);
+            $query->bindValue(":un", $un);
+
+            return $query->execute();
+
+        }
+
+        return false;
+    } // end the function updateDetails()
+
     /* ===============      register      ====================== */
 
     public function register($fn, $ln, $un, $em, $em2, $pw, $pw2){
@@ -173,6 +194,32 @@ class Account {
 
     } // Fin de la funcion validateEmails
 
+    public function validateNewEmails($em, $un){
+
+        // Filtro el email si no tiene .com o formato de correo
+        if(!filter_var($em, FILTER_VALIDATE_EMAIL)){
+
+            array_push($this->errorArray, Constants::$emailInvalid);
+            return;
+
+        }
+
+        // Consulta para saber si el email ya esta registrado en la base de datos
+        $query = $this->con->prepare("SELECT * FROM users WHERE email=:em AND username != :un");
+        $query->bindValue(":em", $em);
+        $query->bindValue(":un", $un);
+
+
+        $query->execute();
+
+        if($query->rowCount() != 0){
+
+            array_push($this->errorArray, Constants::$emailTaken);
+
+        }
+
+    } // Fin de la funcion validateEmails
+
 
 
 
@@ -205,7 +252,45 @@ class Account {
 
         }
 
-    } // Fin de la funcion getError
+    } // Fin de la funcion getError()
+
+    public function getFirstError() {
+        if(!empty($this->errorArray)){
+            return $this->errorArray[0];
+        }
+    } // end the function getFirstError()
+
+    public function updatePassword($oldPw, $pw, $pw2, $un) {
+        $this->validateOldPassword($oldPw, $un);
+        $this->validatePasswords($pw, $pw2);
+
+        if(empty($this->errorArray)){
+            $query = $this->con->prepare("UPDATE users SET password=:pw WHERE username=:un");
+            $pw = hash("sha512", $pw);
+            $query->bindValue(":pw", $pw);
+            $query->bindValue(":un", $un);
+
+            return $query->execute();
+
+        }
+
+        return false;
+    } // end the function updatePassword()
+
+    public function validateOldPassword($oldPw, $un) {
+        $pw = hash("sha512", $oldPw);
+
+        $query = $this->con->prepare("SELECT * FROM  users WHERE username=:un AND password=:pw");
+
+        $query->bindValue(":un", $un);
+        $query->bindValue(":pw", $pw);
+
+        $query->execute();
+
+        if($query->rowCount() == 0){
+            array_push($this->errorArray, Constants::$passwordIncorrect);
+        }
+    } // end the function validateOldPassword()
 
 } // Fin de la clase Account
 
